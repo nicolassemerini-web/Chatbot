@@ -37,6 +37,6 @@ export async function* streamReply(
 
   for await (const chunk of provider.streamChat(request, signal)) {
     if (chunk.type === "text") yield chunk.text;
-    // chunk.type === "done": en la Fase 3 se registra aquí el consumo.
+    // chunk.type === "done": en la Fase 4 se registra aquí el consumo.
   }
 }

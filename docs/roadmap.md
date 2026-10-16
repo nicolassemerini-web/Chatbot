@@ -10,7 +10,7 @@ Cada fase termina con una revisión y **no se empieza la siguiente sin aprobaci�
 
 Arquitectura aprobada.
 
-## Fase 1: Esqueleto e interfaz (sin IA real) ✅ (esta fase)
+## Fase 1: Esqueleto e interfaz (sin IA real) ✅
 
 Objetivo: una aplicación navegable en el móvil, con un chat que responde con el proveedor falso. El inicio de sesión llega en la Fase 2.
 
@@ -31,25 +31,47 @@ Objetivo: una aplicación navegable en el móvil, con un chat que responde con e
 
 1. Migraciones SQL: tablas, índices y **políticas RLS**.
 2. Supabase Auth con enlace mágico, confirmación de 18+ y aceptación de términos.
-3. Personajes cargados desde la base de datos (`seed.sql` con 2 o 3 personajes).
-4. Conversaciones y mensajes persistentes.
-5. Pruebas de aislamiento con dos usuarios.
+3. Contenido editable en la base de datos, preparado para el panel de administración:
+   - personajes (`characters`, con `seed.sql` para los 3 actuales);
+   - textos de la web (`site_content`), con los textos actuales como valores por defecto;
+   - planes, límites y ajustes de IA (`plans`, `app_settings`).
+4. Rol de administrador (`profiles.role = 'admin'`) y políticas RLS: solo un administrador puede modificar el contenido editable.
+5. Conversaciones y mensajes persistentes.
+6. Pruebas de aislamiento con dos usuarios y de que un usuario normal no puede editar contenido.
 
 **Necesita del propietario:** cuenta de Supabase y un proyecto creado (región de la UE).
-**Terminado cuando:** dos usuarios distintos no pueden ver ni modificar nada del otro (comprobado con pruebas).
+**Terminado cuando:** dos usuarios distintos no pueden ver ni modificar nada del otro, y solo el administrador puede cambiar el contenido (comprobado con pruebas).
 
-## Fase 3: Motor de conversación con IA real
+## Fase 3: Panel de administración (sin código)
+
+Objetivo: que el propietario pueda cambiar personajes, textos, límites y modelo de IA desde la propia web, con formularios, también desde el móvil.
+
+1. Sección `/admin`, solo accesible para administradores (comprobado en el servidor en cada acción, no solo en la interfaz).
+2. **Personajes:** crear, editar, ocultar o publicar; nombre, edad, descripción, intereses, personalidad, estilo, límites, nivel de iniciativa y avatar (subida de imagen). Incluye **"Probar personaje"**, un chat de prueba antes de publicar, e historial de versiones para deshacer cambios.
+3. **Textos de la web:** editar títulos, descripciones, avisos y páginas legales, con vista previa.
+4. **Límites y planes:** mensajes gratuitos al día, longitud máxima de mensaje, peticiones por minuto, tope global de gasto diario y planes.
+5. **Modelo de IA:** elegir el modelo por defecto y, si se quiere, uno distinto por personaje o plan, de una lista cerrada de modelos válidos para evitar errores. Hasta la Fase 4 solo estará disponible el proveedor simulado.
+6. Registro de cambios: quién cambió qué y cuándo.
+7. Resumen: usuarios, mensajes del día y gasto estimado.
+
+**No editable desde el panel, a propósito:**
+- Las **claves API** y secretos: siguen en variables de entorno, por seguridad.
+- Las **reglas de seguridad comunes** a todos los personajes (identificarse como IA, sin contenido sexual explícito, etc.), para que ningún cambio de contenido pueda saltárselas.
+
+**Terminado cuando:** el propietario crea un personaje nuevo, cambia un texto y un límite desde el panel, y los cambios se ven en la web sin desplegar código.
+
+## Fase 4: Motor de conversación con IA real
 
 1. Adaptador del proveedor real (Anthropic), con streaming y caché de prompts.
 2. Constructor de prompts con reglas comunes y ficha del personaje.
-3. Límites de consumo: anti-abuso, cuota diaria y freno global de gasto.
+3. Límites de consumo: anti-abuso, cuota diaria y freno global de gasto (leídos de los ajustes del panel).
 4. Registro de tokens y coste por mensaje.
 5. Conjunto de conversaciones de evaluación (identidad de IA, intentos de saltarse las reglas).
 
 **Necesita del propietario:** cuenta en el proveedor de IA, clave API y límite de gasto configurado en su consola.
 **Terminado cuando:** conversación real en streaming, límites comprobados con pruebas y coste por mensaje medido (no estimado).
 
-## Fase 4: Memoria e iniciativa
+## Fase 5: Memoria e iniciativa
 
 1. Extracción de recuerdos con modelo económico y salida JSON validada.
 2. Filtro de datos sensibles (instrucciones + filtro determinista) con pruebas.
@@ -59,7 +81,7 @@ Objetivo: una aplicación navegable en el móvil, con un chat que responde con e
 
 **Terminado cuando:** el personaje recuerda y retoma temas entre sesiones, y no guarda datos sensibles en las pruebas de evaluación.
 
-## Fase 5: Privacidad, despliegue y preparación comercial
+## Fase 6: Privacidad, despliegue y preparación comercial
 
 1. Exportación y borrado de datos; trabajo programado de conservación limitada.
 2. Cabeceras de seguridad, páginas legales (contenido a revisar por un profesional).
@@ -74,4 +96,3 @@ Objetivo: una aplicación navegable en el móvil, con un chat que responde con e
 - WhatsApp, Telegram y otras mensajerías.
 - Mensajes enviados por el personaje sin que el usuario abra la app (push o correo).
 - Voz, imágenes generadas y aplicaciones nativas.
-- Panel de administración visual para crear personajes (al principio se crean con SQL).

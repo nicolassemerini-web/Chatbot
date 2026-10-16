@@ -1,6 +1,6 @@
 # Servicios externos y costes
 
-> **Aviso sobre los precios.** Los precios de la IA de Anthropic son los publicados para su API en octubre de 2026. El resto son **aproximados**, según la información disponible al redactar este documento, y deben comprobarse en la web de cada proveedor antes de contratar. Los precios en dólares (USD) se facturan en esa moneda. Los costes de IA por mensaje son **estimaciones**: se medirán con datos reales en la Fase 3.
+> **Aviso sobre los precios.** Los precios de la IA de Anthropic son los publicados para su API en octubre de 2026. El resto son **aproximados**, según la información disponible al redactar este documento, y deben comprobarse en la web de cada proveedor antes de contratar. Los precios en dólares (USD) se facturan en esa moneda. Los costes de IA por mensaje son **estimaciones**: se medirán con datos reales en la Fase 4.
 
 ## 1. Servicios y cuándo hacen falta
 
@@ -8,11 +8,11 @@
 | --- | --- | --- | --- |
 | **GitHub** | Repositorio del código | Ya disponible | — |
 | **Supabase** | Base de datos, autenticación, tareas programadas | Fase 2 | Sí, la Fase 1 no lo necesita |
-| **Proveedor de IA** (Anthropic recomendado) | Respuestas de los personajes y memoria | Fase 3 | Sí, hasta la Fase 3 se usa el proveedor falso |
-| **Vercel** | Alojamiento | Fase 5 (o antes para enseñar demos) | Sí, se desarrolla en local |
-| **Dominio** | Dirección web propia | Fase 5 | Sí |
-| **Correo transaccional** (Resend u otro SMTP) | Enlaces mágicos de inicio de sesión en producción | Fase 5 | Sí, en desarrollo basta el correo incluido en Supabase |
-| **Stripe** | Suscripciones | Fase 5, solo si se aprueba | **Sí, no se integra todavía** |
+| **Proveedor de IA** (Anthropic recomendado) | Respuestas de los personajes y memoria | Fase 4 | Sí, hasta la Fase 4 se usa el proveedor falso |
+| **Vercel** | Alojamiento | Fase 6 (o antes para enseñar demos) | Sí, se desarrolla en local |
+| **Dominio** | Dirección web propia | Fase 6 | Sí |
+| **Correo transaccional** (Resend u otro SMTP) | Enlaces mágicos de inicio de sesión en producción | Fase 6 | Sí, en desarrollo basta el correo incluido en Supabase |
+| **Stripe** | Suscripciones | Fase 6, solo si se aprueba | **Sí, no se integra todavía** |
 | Asesoría legal | Privacidad, términos, IA y RGPD | Antes del lanzamiento público | Sí, pero no se debe lanzar sin ella |
 | Upstash Redis | Límites de peticiones a gran escala | Solo si PostgreSQL se queda corto | Sí, probablemente no haga falta |
 | Servicio de *embeddings* | Búsqueda semántica en la memoria | Solo si se necesita | Sí, no está en el MVP |
@@ -52,7 +52,7 @@ La extracción de recuerdos con Haiku 5.5 añade unos 0,0003 $ por mensaje, una 
 **Conclusiones:**
 
 - La IA es el **único coste que crece con el uso**, así que los límites de consumo son imprescindibles desde el principio.
-- Un plan gratuito generoso con Sonnet 5.5 es caro. Opciones: limitar los mensajes diarios gratuitos, usar Haiku 5.5 en el plan gratuito y Sonnet 5.5 en el de pago, o ambas cosas. Se decidirá con mediciones reales en la Fase 3.
+- Un plan gratuito generoso con Sonnet 5.5 es caro. Opciones: limitar los mensajes diarios gratuitos, usar Haiku 5.5 en el plan gratuito y Sonnet 5.5 en el de pago, o ambas cosas. Se decidirá con mediciones reales en la Fase 4.
 - El precio de una futura suscripción tendrá que cubrir el perfil intensivo con margen, más la comisión de Stripe y el IVA.
 
 ## 3. Infraestructura (precios aproximados)
@@ -63,7 +63,7 @@ La extracción de recuerdos con Haiku 5.5 añade unos 0,0003 $ por mensaje, una 
 | Vercel | Hobby: 0 $ | Pro: ~20 $/mes por miembro | **Hobby no permite uso comercial**: para lanzar el producto hace falta Pro |
 | Correo (Resend) | ~3.000 correos al mes | ~20 $/mes | El correo incluido en Supabase tiene un límite muy bajo y no sirve en producción |
 | Dominio | — | ~10-20 €/año | |
-| Stripe | Sin cuota fija | Comisión por cobro (en Europa, aproximadamente 1,5 % + 0,25 € por tarjeta, más un pequeño porcentaje adicional por Billing) | Solo en la Fase 5 |
+| Stripe | Sin cuota fija | Comisión por cobro (en Europa, aproximadamente 1,5 % + 0,25 € por tarjeta, más un pequeño porcentaje adicional por Billing) | Solo en la Fase 6 |
 | GitHub | 0 $ | — | Suficiente |
 
 ## 4. Escenarios de coste mensual
@@ -80,9 +80,9 @@ Además hay un coste puntual de asesoría legal (textos legales y cumplimiento d
 ## 5. Cuentas que necesitarás (por orden)
 
 1. **Supabase** (Fase 2): crear un proyecto en una región de la UE.
-2. **Anthropic Console** (Fase 3): crear una clave API, añadir crédito prepago y **configurar un límite de gasto mensual**.
-3. **Vercel** (Fase 5): conectar con GitHub.
-4. **Proveedor de correo** y **dominio** (Fase 5).
-5. **Stripe** (Fase 5, solo si se aprueba).
+2. **Anthropic Console** (Fase 4): crear una clave API, añadir crédito prepago y **configurar un límite de gasto mensual**.
+3. **Vercel** (Fase 6): conectar con GitHub.
+4. **Proveedor de correo** y **dominio** (Fase 6).
+5. **Stripe** (Fase 6, solo si se aprueba).
 
 No pegues nunca las claves en un chat ni en el código: se guardan en `.env.local` en tu ordenador y en el panel de variables de entorno de Vercel.

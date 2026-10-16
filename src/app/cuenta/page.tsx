@@ -12,17 +12,17 @@ const SECTIONS = [
   {
     title: "Memoria de los personajes",
     text: "Consulta lo que cada personaje recuerda de ti y borra lo que no quieras que recuerde.",
-    phase: "Fase 4",
+    phase: "Fase 5",
   },
   {
     title: "Exportar mis datos",
     text: "Descarga tus conversaciones, recuerdos y datos de perfil en un archivo.",
-    phase: "Fase 5",
+    phase: "Fase 6",
   },
   {
     title: "Eliminar mi cuenta",
     text: "Borra de forma definitiva tu cuenta y todos tus datos.",
-    phase: "Fase 5",
+    phase: "Fase 6",
   },
 ];
 

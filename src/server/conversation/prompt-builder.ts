@@ -17,7 +17,7 @@ export function buildCharacterBlock(character: Character): string {
 
 /**
  * Construye la petición al modelo, de lo más estable a lo más variable:
- * reglas comunes → ficha del personaje → (Fase 4: resumen y recuerdos) →
+ * reglas comunes → ficha del personaje → (Fase 5: resumen y recuerdos) →
  * últimos mensajes.
  */
 export function buildChatRequest(

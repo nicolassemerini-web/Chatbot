@@ -27,7 +27,7 @@ export function getAiProvider(mockScript: MockScript): AiProvider {
     case "mock":
       return createMockProvider(mockScript);
     default:
-      // Los proveedores reales se añaden en la Fase 3.
+      // Los proveedores reales se añaden en la Fase 4.
       throw new AiError("misconfigured", `Proveedor de IA no soportado: ${provider}`);
   }
 }

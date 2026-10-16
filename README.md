@@ -2,7 +2,7 @@
 
 Plataforma web, pensada sobre todo para móviles, donde los usuarios conversan con **personajes ficticios** impulsados por inteligencia artificial. Cada personaje tiene una personalidad propia y coherente, recuerda la información relevante de cada usuario y puede retomar temas pendientes.
 
-> **Estado actual: Fase 1, esqueleto e interfaz.** La aplicación funciona en local con un proveedor de IA **simulado**: sin cuentas, sin claves y sin coste. Todavía no hay inicio de sesión, base de datos ni IA real (Fases 2 y 3).
+> **Estado actual: Fase 1, esqueleto e interfaz.** La aplicación funciona en local con un proveedor de IA **simulado**: sin cuentas, sin claves y sin coste. Todavía no hay inicio de sesión, base de datos ni IA real (Fases 2 y 4).
 
 ## Principios del producto
 
@@ -17,14 +17,15 @@ Plataforma web, pensada sobre todo para móviles, donde los usuarios conversan c
 
 | Capa | Tecnología | Estado |
 | --- | --- | --- |
-| Interfaz y servidor | Next.js (App Router), React, TypeScript estricto | Fase 1 |
-| Estilos | Tailwind CSS | Fase 1 |
-| Base de datos | Supabase (PostgreSQL) con RLS | Fase 1 |
-| Autenticación | Supabase Auth (enlace mágico por correo y/o contraseña) | Fase 1 |
-| Validación | Zod | Fase 1 |
-| IA | Adaptador propio; primer proveedor recomendado: Anthropic (Claude) | Fase 2 |
-| Alojamiento | Vercel (plan Pro si es uso comercial) | Fase 3 |
-| Pagos | Stripe | **Pospuesto** (Fase 5) |
+| Interfaz y servidor | Next.js (App Router), React, TypeScript estricto | ✅ Fase 1 |
+| Estilos | Tailwind CSS | ✅ Fase 1 |
+| Validación | Zod | ✅ Fase 1 |
+| Base de datos | Supabase (PostgreSQL) con RLS | Fase 2 |
+| Autenticación | Supabase Auth (enlace mágico por correo y/o contraseña) | Fase 2 |
+| Panel de administración | Sección `/admin` para gestionar personajes, textos, límites y modelo de IA sin código | Fase 3 |
+| IA | Adaptador propio; primer proveedor recomendado: Anthropic (Claude) | Fase 4 |
+| Alojamiento | Vercel (plan Pro si es uso comercial) | Fase 6 |
+| Pagos | Stripe | **Pospuesto** (Fase 6) |
 | Mensajería (WhatsApp, Telegram) | — | **Fuera de alcance** |
 
 ## Documentación

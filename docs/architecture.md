@@ -17,7 +17,8 @@ Next.js en Vercel ────────────────────�
 │        ├─► 6. Memoria      server/memory    ──► PostgreSQL (Supabase)   │
 │        ├─► 7. Límites      server/quotas    ──► PostgreSQL (Supabase)   │
 │        └─► 5. Proveedor IA server/ai        ──► API del proveedor (IA)  │
-│  8. Suscripciones          server/billing   ──► Stripe (Fase 5)         │
+│  8. Suscripciones          server/billing   ──► Stripe (Fase 6)         │
+│  9. Administración         server/admin     ──► PostgreSQL (Supabase)   │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -35,7 +36,7 @@ Toda la lógica de negocio vive en `src/server/` y solo se ejecuta en el servido
 | IA | Interfaz propia + adaptador de Anthropic | Se puede cambiar de proveedor sin tocar el motor | OpenAI, Google, Mistral |
 | Límites de consumo | Contadores en PostgreSQL | Sin servicio adicional; suficiente para el volumen inicial | Upstash Redis si el volumen crece |
 | Despliegue | Vercel | Integración directa con Next.js | Netlify, Railway, Fly.io |
-| Pagos | Stripe (Fase 5) | Estándar del mercado, suscripciones y facturación | Lemon Squeezy, Paddle (actúan como vendedor y gestionan el IVA) |
+| Pagos | Stripe (Fase 6) | Estándar del mercado, suscripciones y facturación | Lemon Squeezy, Paddle (actúan como vendedor y gestionan el IVA) |
 
 > **Aviso sobre Next.js.** Las versiones recientes (16.x) incluyen cambios incompatibles con versiones anteriores; por ejemplo, el antiguo `middleware.ts` se llama ahora `proxy.ts`. Antes de escribir código se consultará la documentación incluida en `node_modules/next/dist/docs/` de la versión instalada.
 
@@ -49,6 +50,7 @@ src/
       personajes/              #    catálogo de personajes
       chat/[characterId]/      #    conversación
       cuenta/                  #    perfil, exportar y borrar datos, memoria
+    admin/                     # 9. panel de administración (solo administradores)
     api/chat/route.ts          #    respuesta del personaje en streaming
   components/                  # componentes de interfaz reutilizables
   server/                      # lógica de negocio, SOLO servidor
@@ -66,7 +68,9 @@ src/
       index.ts                 #    selecciona el proveedor según AI_PROVIDER
     memory/                    # 6. extracción, filtrado, recuperación y caducidad
     quotas/                    # 7. límites de peticiones, mensajes y gasto
-    billing/                   # 8. suscripciones (vacío hasta la Fase 5)
+    billing/                   # 8. suscripciones (vacío hasta la Fase 6)
+    admin/                     # 9. comprobación de rol, cambios de contenido y registro
+    content/                   #    textos de la web y ajustes leídos de la base de datos
     privacy/                   #    exportación y borrado de datos
   lib/
     supabase/                  # clientes de Supabase (navegador, servidor, admin)
@@ -97,7 +101,7 @@ tests/                         # pruebas unitarias y de integración
 
 ### 4.3 Gestión de personajes
 
-Un personaje es **datos, no código**. Añadir un personaje nuevo consiste en insertar una fila (y una imagen), sin desplegar nada.
+Un personaje es **datos, no código**. Añadir un personaje nuevo consiste en rellenar un formulario en el panel de administración (4.9), sin desplegar nada.
 
 Ficha de personaje (`characters`):
 
@@ -203,22 +207,52 @@ Además se fija un `max_tokens` por respuesta y se limita el tamaño del context
 Se diseñan ahora, pero no se implementan:
 
 - `profiles.plan` (`free` por defecto) es la única fuente que consultan los límites. Las cuotas por plan están en una tabla `plans`, no en el código.
-- En la Fase 5, un webhook de Stripe actualizará `subscriptions` y `profiles.plan`. El resto de la aplicación no cambia.
+- En la Fase 6, un webhook de Stripe actualizará `subscriptions` y `profiles.plan`. El resto de la aplicación no cambia.
 - No se guardan datos de tarjeta: Stripe los gestiona por completo.
+
+### 4.9 Panel de administración
+
+Objetivo: que el propietario cambie el contenido y la configuración **sin tocar código**, desde una sección `/admin` de la propia web.
+
+| Sección | Qué se puede cambiar |
+| --- | --- |
+| Personajes | Crear, editar, ocultar o publicar; ficha completa (4.3), avatar (Supabase Storage) y modelo de IA propio opcional. Chat de prueba antes de publicar e historial de versiones |
+| Textos de la web | Títulos, descripciones, avisos y páginas legales (tabla `site_content`), con vista previa |
+| Límites y planes | Cuotas por plan, longitud máxima de mensaje, peticiones por minuto, tope global de gasto (tablas `plans` y `app_settings`) |
+| Modelo de IA | Modelo por defecto, por plan o por personaje, elegido de una lista cerrada de modelos válidos |
+| Resumen | Usuarios, mensajes del día y gasto estimado |
+
+Funcionamiento:
+
+- **Acceso:** solo usuarios con `profiles.role = 'admin'`. El primer administrador se asigna una sola vez desde el panel de Supabase; después todo se hace desde `/admin`.
+- **Doble protección:** cada Server Action del panel comprueba el rol en el servidor, y además las políticas RLS impiden que un usuario no administrador modifique esas tablas aunque llame a la base de datos directamente.
+- **Validación:** todos los formularios se validan con Zod en el servidor (longitudes, valores permitidos, modelos de la lista cerrada).
+- **Efecto inmediato:** al guardar se invalida la caché de las páginas afectadas, sin redesplegar.
+- **Trazabilidad:** cada cambio se guarda en `admin_audit_log` (quién, qué, cuándo, valor anterior) y los personajes guardan versiones para poder deshacer.
+- **Valores por defecto:** si la base de datos no tiene un texto o ajuste, se usa el valor por defecto del código, para que la web nunca se quede en blanco.
+
+Quedan **fuera del panel a propósito**:
+
+- Las claves API y demás secretos, que siguen en variables de entorno.
+- Las reglas de seguridad comunes (4.3), para que ningún cambio de contenido pueda desactivarlas.
 
 ## 5. Modelo de datos (borrador)
 
 | Tabla | Campos principales | Acceso del usuario (RLS) |
 | --- | --- | --- |
-| `profiles` | `id` (= `auth.users.id`), `display_name`, `birth_year_confirmed_adult_at`, `terms_accepted_at`, `plan`, `initiative_enabled`, `created_at` | Leer y editar solo la propia fila (excepto `plan`) |
-| `characters` | ficha descrita en 4.3 | Leer los activos; sin escritura |
+| `profiles` | `id` (= `auth.users.id`), `display_name`, `birth_year_confirmed_adult_at`, `terms_accepted_at`, `plan`, `role` (`user` o `admin`), `initiative_enabled`, `created_at` | Leer y editar solo la propia fila (excepto `plan` y `role`) |
+| `characters` | ficha descrita en 4.3, más `model` (opcional) y `avatar_url` | Leer los activos; solo los administradores escriben |
+| `character_versions` | `character_id`, `version`, `data` (ficha completa), `created_by`, `created_at` | Solo administradores |
 | `conversations` | `id`, `user_id`, `character_id`, `last_message_at` | Solo las propias |
 | `messages` | `id`, `conversation_id`, `user_id`, `role`, `content`, `tokens_in`, `tokens_out`, `created_at` | Leer las propias; la escritura la hace el servidor |
 | `memories` | `id`, `user_id`, `character_id`, `kind`, `content`, `importance`, `status`, `due_at`, `expires_at`, `source_message_id` | Leer y borrar las propias |
 | `conversation_summaries` | `conversation_id`, `user_id`, `summary`, `updated_at` | Leer las propias |
 | `usage_counters` | `user_id`, `day`, `messages`, `tokens_in`, `tokens_out`, `cost_micros` | Leer los propios |
-| `plans` | `id`, `daily_messages`, `max_output_tokens` | Leer todos |
-| `subscriptions` | (Fase 5) | Leer las propias |
+| `plans` | `id`, `name`, `daily_messages`, `max_output_tokens`, `model` | Leer todos; solo los administradores escriben |
+| `site_content` | `key`, `value`, `updated_at`, `updated_by` | Leer todos; solo los administradores escriben |
+| `app_settings` | `key`, `value` (JSON), `updated_at`, `updated_by` | Solo el servidor y los administradores |
+| `admin_audit_log` | `id`, `admin_id`, `entity`, `entity_id`, `before`, `after`, `created_at` | Solo administradores (lectura); lo escribe el servidor |
+| `subscriptions` | (Fase 6) | Leer las propias |
 
 Notas:
 
@@ -231,6 +265,7 @@ Notas:
 | Riesgo | Medida |
 | --- | --- |
 | Un usuario lee datos de otro | **RLS activado en todas las tablas**, con políticas `user_id = auth.uid()`; pruebas automáticas que lo verifican con dos usuarios |
+| Un usuario normal intenta usar el panel | Rol comprobado en el servidor en cada acción de `/admin` y políticas RLS que solo permiten escribir contenido a administradores; pruebas automáticas que lo verifican |
 | Escrituras manipuladas desde el navegador | Los mensajes, el consumo y el plan solo los escribe el servidor; las políticas no permiten `insert` ni `update` directos en esas columnas |
 | Fuga de claves | Claves privadas solo en variables de entorno del servidor, sin `NEXT_PUBLIC_`; `import "server-only"` en los módulos sensibles; `.env*` en `.gitignore` |
 | Uso indebido de `service_role` | Un único cliente "admin", usado solo en borrado de cuentas y tareas programadas, nunca en el flujo normal del chat |
@@ -267,5 +302,5 @@ Notas:
 | Proveedor de IA | Anthropic, OpenAI, Google, Mistral | **Anthropic**, con el adaptador falso para desarrollar sin coste |
 | Método de acceso | Enlace mágico, contraseña, Google | **Enlace mágico** para empezar; Google más adelante |
 | Búsqueda semántica en la memoria | Sin *embeddings* o con `pgvector` | **Sin *embeddings*** en el MVP |
-| Pagos | Stripe, o un vendedor registrado (Paddle, Lemon Squeezy) que gestiona el IVA | Decidir en la Fase 5 según la situación fiscal |
+| Pagos | Stripe, o un vendedor registrado (Paddle, Lemon Squeezy) que gestiona el IVA | Decidir en la Fase 6 según la situación fiscal |
 | Idioma | Solo español o multiidioma | **Español** en el MVP, con los textos centralizados para traducir después |
