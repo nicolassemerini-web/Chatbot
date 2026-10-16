@@ -2,17 +2,17 @@
 
 Cada fase termina con una revisión y **no se empieza la siguiente sin aprobación expresa**.
 
-## Fase 0: Entorno, arquitectura y documentación ✅ (esta fase)
+## Fase 0: Entorno, arquitectura y documentación ✅
 
 - Inspección del entorno y de las herramientas disponibles.
 - Arquitectura, servicios necesarios, costes y hoja de ruta.
 - Archivos: `README.md`, `docs/architecture.md`, `docs/roadmap.md`, `docs/costs-and-services.md`, `.gitignore`, `.env.example`.
 
-**Pendiente de decisión del propietario:** aceptar la arquitectura.
+Arquitectura aprobada.
 
-## Fase 1: Esqueleto e interfaz (sin IA real)
+## Fase 1: Esqueleto e interfaz (sin IA real) ✅ (esta fase)
 
-Objetivo: una aplicación navegable en el móvil, con inicio de sesión y un chat que responde con el proveedor falso.
+Objetivo: una aplicación navegable en el móvil, con un chat que responde con el proveedor falso. El inicio de sesión llega en la Fase 2.
 
 1. Crear el proyecto Next.js con TypeScript estricto, Tailwind y ESLint (`create-next-app`), y revisar la documentación de la versión instalada.
 2. Pantallas mobile-first: inicio, catálogo de personajes, chat y cuenta (con datos de prueba).
@@ -21,6 +21,11 @@ Objetivo: una aplicación navegable en el móvil, con inicio de sesión y un cha
 
 **Necesita del propietario:** nada externo. Se puede hacer sin cuentas.
 **Terminado cuando:** `npm run lint`, `npm run build` y las pruebas pasan, y el chat funciona en local con el proveedor falso.
+
+**Notas de la implementación:**
+
+- En esta fase el historial de la conversación vive en el navegador y se envía en cada petición (validado y limitado en el servidor). En la Fase 2 se guardará en la base de datos y el cliente solo enviará el mensaje nuevo.
+- Una dirección de personaje inexistente (`/chat/xyz`) muestra la página "no encontrado", pero con código HTTP 200 en lugar de 404, por el renderizado parcial de Next.js. Se revisará cuando los personajes vengan de la base de datos.
 
 ## Fase 2: Supabase, autenticación y datos
 

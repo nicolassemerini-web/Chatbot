@@ -2,7 +2,7 @@
 
 Plataforma web, pensada sobre todo para móviles, donde los usuarios conversan con **personajes ficticios** impulsados por inteligencia artificial. Cada personaje tiene una personalidad propia y coherente, recuerda la información relevante de cada usuario y puede retomar temas pendientes.
 
-> **Estado actual: Fase 0, documentación y arquitectura.** Todavía no hay código de aplicación. Esta carpeta contiene solo la propuesta técnica, la hoja de ruta y la estimación de costes.
+> **Estado actual: Fase 1, esqueleto e interfaz.** La aplicación funciona en local con un proveedor de IA **simulado**: sin cuentas, sin claves y sin coste. Todavía no hay inicio de sesión, base de datos ni IA real (Fases 2 y 3).
 
 ## Principios del producto
 
@@ -55,6 +55,42 @@ Opcionales:
 
 Copia `.env.example` como `.env.local` y rellena los valores. **`.env.local` no se sube nunca al repositorio.** Las variables sin el prefijo `NEXT_PUBLIC_` solo existen en el servidor; las claves privadas (IA, `service_role` de Supabase) no deben llevar ese prefijo jamás.
 
+## Ejecutar en local
+
+```bash
+npm install
+npm run dev      # http://localhost:3000
+```
+
+No hace falta crear `.env.local` todavía: por defecto se usa el proveedor simulado (`AI_PROVIDER=mock`). Para verlo como en un móvil, abre las herramientas de desarrollo del navegador y activa la vista de dispositivo, o entra desde el móvil a la IP de tu ordenador en la misma red.
+
 ## Comandos
 
-Se añadirán en la Fase 1, cuando exista el proyecto de Next.js.
+```bash
+npm run dev        # servidor de desarrollo
+npm run build      # compilación de producción
+npm run start      # servidor de producción (tras compilar)
+npm run lint       # ESLint
+npm run typecheck  # comprobación de tipos de TypeScript
+npm test           # pruebas unitarias y de integración (Vitest)
+```
+
+## Estructura
+
+```
+src/
+  app/
+    page.tsx                 # inicio
+    personajes/page.tsx      # catálogo de personajes
+    chat/[slug]/             # conversación (página + ChatWindow, componente de cliente)
+    cuenta/page.tsx          # cuenta (secciones previstas, todavía inactivas)
+    api/chat/route.ts        # POST: valida y devuelve la respuesta en streaming
+  components/                # cabecera, avatar, aviso de IA
+  lib/validation/            # esquemas Zod y límites compartidos
+  server/                    # lógica de negocio, solo servidor
+    ai/                      # interfaz AiProvider, proveedor simulado y selector
+    characters/              # catálogo provisional de personajes
+    conversation/            # reglas de seguridad, constructor del prompt y motor
+tests/                       # pruebas con Vitest
+docs/                        # arquitectura, hoja de ruta y costes
+```
