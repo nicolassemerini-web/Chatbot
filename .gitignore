@@ -1,0 +1,46 @@
+# dependencias
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+/playwright-report
+/test-results
+
+# build de Next.js
+/.next/
+/out/
+/build
+
+# variables de entorno (solo se versiona .env.example)
+.env
+.env*.local
+.env.*
+!.env.example
+
+# Supabase local
+/supabase/.branches
+/supabase/.temp
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# editores / sistema
+.DS_Store
+*.pem
+.vscode/
+.idea/
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# exportaciones de datos de usuarios generadas en local (nunca se versionan)
+/exports
