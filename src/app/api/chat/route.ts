@@ -14,6 +14,13 @@ export async function POST(request: Request) {
   if (!isSupabaseConfigured()) {
     return errorResponse(503, "La base de datos no está configurada.");
   }
+  if (!process.env.SUPABASE_SECRET_KEY) {
+    console.error("[chat] falta SUPABASE_SECRET_KEY en .env.local");
+    return errorResponse(
+      503,
+      "Falta la clave secreta de Supabase (SUPABASE_SECRET_KEY) en el archivo .env.local.",
+    );
+  }
 
   // Autorización en el servidor: nunca se confía en lo que diga el navegador.
   const user = await getCurrentUser();

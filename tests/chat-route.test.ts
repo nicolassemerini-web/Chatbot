@@ -43,6 +43,14 @@ describe("POST /api/chat", () => {
     state.store = mem.store;
     state.user = { id: "u1", email: "u1@example.com" };
     state.onboarded = true;
+    process.env.SUPABASE_SECRET_KEY = "clave-de-prueba";
+  });
+
+  it("explica que falta la clave secreta si no está configurada (503)", async () => {
+    delete process.env.SUPABASE_SECRET_KEY;
+    const res = await post({ characterSlug: "lucia", message: "Hola" });
+    expect(res.status).toBe(503);
+    expect((await res.json()).error).toContain("SUPABASE_SECRET_KEY");
   });
 
   it("exige sesión (401)", async () => {
