@@ -268,7 +268,7 @@ Notas:
 | Un usuario normal intenta usar el panel | Rol comprobado en el servidor en cada acción de `/admin` y políticas RLS que solo permiten escribir contenido a administradores; pruebas automáticas que lo verifican |
 | Escrituras manipuladas desde el navegador | Los mensajes, el consumo y el plan solo los escribe el servidor; las políticas no permiten `insert` ni `update` directos en esas columnas |
 | Fuga de claves | Claves privadas solo en variables de entorno del servidor, sin `NEXT_PUBLIC_`; `import "server-only"` en los módulos sensibles; `.env*` en `.gitignore` |
-| Uso indebido de `service_role` | Un único cliente "admin", usado solo en borrado de cuentas y tareas programadas, nunca en el flujo normal del chat |
+| Uso indebido de la clave secreta (`service_role`) | Un único cliente (`src/server/db/admin.ts`), solo en el servidor. Se usa para lo que el navegador nunca debe poder hacer: escribir mensajes y conversaciones, y más adelante el consumo y las tareas programadas. Siempre filtra por el usuario ya verificado; las lecturas del usuario (historial, perfil) usan su propia sesión y pasan por RLS |
 | Entradas maliciosas | Validación con Zod en cada Server Action o ruta; límite de longitud; el texto se muestra escapado (sin `dangerouslySetInnerHTML`) |
 | Manipulación del personaje (*prompt injection*) | Reglas de seguridad en el bloque de sistema, separadas del texto del usuario; los recuerdos extraídos se tratan como datos y pasan por el filtro antes de guardarse |
 | Abuso y facturas disparadas | Límites del apartado 4.7, freno global de gasto y límite en la consola del proveedor |

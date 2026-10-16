@@ -1,30 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState, useTransition, type FormEvent, type KeyboardEvent } from "react";
 import { AiNotice } from "@/components/AiNotice";
 import { Avatar } from "@/components/Avatar";
-import { MAX_HISTORY_MESSAGES, MAX_MESSAGE_CHARS } from "@/lib/validation/limits";
+import { MAX_MESSAGE_CHARS } from "@/lib/validation/limits";
 import type { CharacterSummary } from "@/server/characters/types";
+import { deleteConversationAction } from "./acciones";
 
-type Message = { id: number; role: "user" | "assistant"; content: string };
+type Message = { id: number | string; role: "user" | "assistant"; content: string };
 
 type Props = {
   character: CharacterSummary;
+  initialMessages: Message[];
   demoMode: boolean;
 };
 
-let nextId = 0;
+let localId = 0;
+const newLocalId = () => `local-${localId++}`;
 
-export function ChatWindow({ character, demoMode }: Props) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export function ChatWindow({ character, initialMessages, demoMode }: Props) {
+  const router = useRouter();
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
+  const [deleting, startDelete] = useTransition();
   const endRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => () => abortRef.current?.abort(), []);
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
   }, [messages]);
@@ -33,31 +37,35 @@ export function ChatWindow({ character, demoMode }: Props) {
     const text = draft.trim();
     if (!text || pending || text.length > MAX_MESSAGE_CHARS) return;
 
-    const userMessage: Message = { id: nextId++, role: "user", content: text };
-    const assistantId = nextId++;
-    const history = [...messages, userMessage];
-
+    const assistantId = newLocalId();
     setDraft("");
     setError(null);
     setPending(true);
-    setMessages([...history, { id: assistantId, role: "assistant", content: "" }]);
-
-    const controller = new AbortController();
-    abortRef.current = controller;
+    setMessages((prev) => [
+      ...prev,
+      { id: newLocalId(), role: "user", content: text },
+      { id: assistantId, role: "assistant", content: "" },
+    ]);
 
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          characterSlug: character.slug,
-          messages: history
-            .slice(-MAX_HISTORY_MESSAGES)
-            .map(({ role, content }) => ({ role, content })),
-        }),
-        signal: controller.signal,
+        body: JSON.stringify({ characterSlug: character.slug, message: text }),
+        // Sin AbortController a propósito: Next.js puede ocultar y volver a
+        // mostrar la página durante una navegación, y cancelar la petición en
+        // ese momento cortaría la respuesta. Si el usuario se va, el servidor
+        // termina la respuesta y la guarda igualmente.
       });
 
+      if (res.status === 401) {
+        router.push(`/entrar?next=${encodeURIComponent(`/chat/${character.slug}`)}`);
+        return;
+      }
+      if (res.status === 403) {
+        router.push(`/bienvenida?next=${encodeURIComponent(`/chat/${character.slug}`)}`);
+        return;
+      }
       if (!res.ok || !res.body) {
         const data: { error?: string } = await res.json().catch(() => ({}));
         throw new Error(data.error ?? "No se ha podido enviar el mensaje.");
@@ -74,12 +82,10 @@ export function ChatWindow({ character, demoMode }: Props) {
         );
       }
     } catch (err) {
-      if (controller.signal.aborted) return;
       setError(err instanceof Error ? err.message : "Error inesperado.");
       // Se quita la burbuja vacía del personaje si no llegó a responder.
       setMessages((prev) => prev.filter((m) => m.id !== assistantId || m.content !== ""));
     } finally {
-      if (abortRef.current === controller) abortRef.current = null;
       setPending(false);
     }
   }
@@ -97,6 +103,19 @@ export function ChatWindow({ character, demoMode }: Props) {
     }
   }
 
+  function onDelete() {
+    if (!window.confirm(`¿Borrar toda la conversación con ${character.name}? No se puede deshacer.`)) return;
+    startDelete(async () => {
+      const result = await deleteConversationAction(character.slug);
+      if (result.ok) {
+        setMessages([]);
+        setError(null);
+      } else {
+        setError("No se ha podido borrar la conversación.");
+      }
+    });
+  }
+
   const tooLong = draft.length > MAX_MESSAGE_CHARS;
 
   return (
@@ -110,15 +129,25 @@ export function ChatWindow({ character, demoMode }: Props) {
           ←
         </Link>
         <Avatar name={character.name} accent={character.accent} size="sm" />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h1 className="truncate font-semibold leading-tight">{character.name}</h1>
           <AiNotice short />
         </div>
+        {messages.length > 0 && (
+          <button
+            type="button"
+            onClick={onDelete}
+            disabled={deleting || pending}
+            className="min-h-11 rounded-full px-3 text-xs text-muted hover:bg-surface disabled:opacity-40"
+          >
+            {deleting ? "Borrando…" : "Borrar chat"}
+          </button>
+        )}
       </header>
 
       {demoMode && (
         <p className="border-b border-border bg-surface px-4 py-1.5 text-center text-xs text-muted">
-          Modo de prueba: las respuestas son simuladas y no se guardan.
+          Modo de prueba: las respuestas son simuladas.
         </p>
       )}
 
@@ -140,6 +169,7 @@ export function ChatWindow({ character, demoMode }: Props) {
         {messages.map((m) => (
           <div key={m.id} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
             <p
+              data-message-role={m.role}
               className={`max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-4 py-2 ${
                 m.role === "user"
                   ? "rounded-br-sm bg-accent text-accent-foreground"

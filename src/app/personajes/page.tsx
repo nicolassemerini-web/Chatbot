@@ -3,18 +3,19 @@ import Link from "next/link";
 import { AiNotice } from "@/components/AiNotice";
 import { Avatar } from "@/components/Avatar";
 import { SiteHeader } from "@/components/SiteHeader";
-import { listCharacters } from "@/server/characters/catalog";
+import { listCharacters } from "@/server/characters/repository";
+import { getSiteContent } from "@/server/content/content";
 
 export const metadata: Metadata = { title: "Personajes" };
 
-export default function CharactersPage() {
-  const characters = listCharacters();
+export default async function CharactersPage() {
+  const [characters, content] = await Promise.all([listCharacters(), getSiteContent()]);
 
   return (
     <>
       <SiteHeader />
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
-        <h1 className="text-2xl font-bold tracking-tight">Personajes</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{content["characters.title"]}</h1>
         <AiNotice className="mt-1" />
 
         <ul className="mt-6 space-y-3">

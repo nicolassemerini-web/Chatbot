@@ -27,7 +27,7 @@ Objetivo: una aplicación navegable en el móvil, con un chat que responde con e
 - En esta fase el historial de la conversación vive en el navegador y se envía en cada petición (validado y limitado en el servidor). En la Fase 2 se guardará en la base de datos y el cliente solo enviará el mensaje nuevo.
 - Una dirección de personaje inexistente (`/chat/xyz`) muestra la página "no encontrado", pero con código HTTP 200 en lugar de 404, por el renderizado parcial de Next.js. Se revisará cuando los personajes vengan de la base de datos.
 
-## Fase 2: Supabase, autenticación y datos
+## Fase 2: Supabase, autenticación y datos ✅
 
 1. Migraciones SQL: tablas, índices y **políticas RLS**.
 2. Supabase Auth con enlace mágico, confirmación de 18+ y aceptación de términos.
@@ -41,6 +41,16 @@ Objetivo: una aplicación navegable en el móvil, con un chat que responde con e
 
 **Necesita del propietario:** cuenta de Supabase y un proyecto creado (región de la UE).
 **Terminado cuando:** dos usuarios distintos no pueden ver ni modificar nada del otro, y solo el administrador puede cambiar el contenido (comprobado con pruebas).
+
+**Notas de la implementación:**
+
+- Acceso con correo y contraseña, o con enlace por correo (sin contraseña). Tras el primer acceso, la bienvenida pide un nombre visible, la confirmación de 18+ y la aceptación de los términos.
+- El historial ya no viaja desde el navegador: el servidor lo lee de la base de datos. Los mensajes los escribe solo el servidor; el usuario puede leer y borrar sus conversaciones.
+- Ni siquiera un administrador puede leer las conversaciones de los usuarios.
+- `supabase/tests/comprobar_seguridad.sql` verifica el aislamiento (perfiles, conversaciones, mensajes, rol y plan, contenido editable, visitantes sin sesión). Se ha probado contra PostgreSQL y contra el esquema de autenticación real de Supabase, y se ha comprobado que detecta fallos introducidos a propósito.
+- Probado de extremo a extremo en un navegador móvil simulado, contra un Supabase local (PostgreSQL, servidor de autenticación y PostgREST): registro, bienvenida, chat guardado, historial al recargar, aislamiento entre dos usuarios, borrado de conversación, cierre de sesión, error de contraseña y bloqueo de redirecciones externas.
+- Sin probar de extremo a extremo: el **enlace por correo**, porque necesita un servidor de correo. Se probará con el proyecto real de Supabase.
+- Los textos legales son **borradores** que necesitan revisión profesional antes del lanzamiento.
 
 ## Fase 3: Panel de administración (sin código)
 

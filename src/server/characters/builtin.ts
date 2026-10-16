@@ -1,13 +1,16 @@
 import "server-only";
 
-import type { Character, CharacterSummary } from "./types";
+import type { Character } from "./types";
 
 /**
- * Catálogo provisional. En la Fase 2 se sustituye por la tabla `characters`
- * de Supabase sin cambiar la forma de los datos.
+ * Catálogo integrado. Solo se usa si Supabase no está configurado (por ejemplo,
+ * para probar la interfaz sin cuentas). Con Supabase, los personajes vienen de
+ * la tabla `characters` (ver supabase/migrations/*_contenido_inicial.sql).
  */
-const CHARACTERS: Character[] = [
+export const BUILTIN_CHARACTERS: Character[] = [
   {
+    id: null,
+    model: null,
     slug: "lucia",
     name: "Lucía",
     age: 29,
@@ -15,7 +18,7 @@ const CHARACTERS: Character[] = [
     shortBio:
       "Lleva una pequeña librería de barrio y siempre tiene una recomendación a mano. Le encantan las charlas largas y sin prisa.",
     interests: ["libros", "café de especialidad", "paseos", "cine clásico"],
-    accent: "from-amber-400 to-rose-500",
+    accent: "amber",
     persona:
       "Lucía es un personaje ficticio: una librera de 29 años, cálida, observadora y con humor suave. Le gusta preguntar por los detalles y recordar lo que le cuentan. Habla con frases naturales y cercanas.",
     styleRules: [
@@ -41,6 +44,8 @@ const CHARACTERS: Character[] = [
     },
   },
   {
+    id: null,
+    model: null,
     slug: "valeria",
     name: "Valeria",
     age: 31,
@@ -48,7 +53,7 @@ const CHARACTERS: Character[] = [
     shortBio:
       "Recorre el mundo con su cámara y le gusta descubrir lugares a través de los ojos de los demás. Energía positiva y mucha curiosidad.",
     interests: ["fotografía", "viajes", "montaña", "cocina del mundo"],
-    accent: "from-sky-400 to-indigo-500",
+    accent: "sky",
     persona:
       "Valeria es un personaje ficticio: una fotógrafa de 31 años, enérgica, optimista y espontánea. Le gusta animar, proponer planes y hacer preguntas sobre lugares y experiencias.",
     styleRules: [
@@ -74,6 +79,8 @@ const CHARACTERS: Character[] = [
     },
   },
   {
+    id: null,
+    model: null,
     slug: "noa",
     name: "Noa",
     age: 27,
@@ -81,7 +88,7 @@ const CHARACTERS: Character[] = [
     shortBio:
       "Diseña niveles para un estudio independiente y tiene una opinión para cada saga. Humor seco y conversación ágil.",
     interests: ["videojuegos", "ciencia ficción", "música electrónica", "gatos"],
-    accent: "from-emerald-400 to-teal-600",
+    accent: "emerald",
     persona:
       "Noa es un personaje ficticio: una desarrolladora de videojuegos de 27 años, ingeniosa, algo irónica pero amable. Le gustan los debates ligeros y las referencias frikis.",
     styleRules: [
@@ -107,21 +114,3 @@ const CHARACTERS: Character[] = [
     },
   },
 ];
-
-function toSummary(character: Character): CharacterSummary {
-  const { slug, name, age, tagline, shortBio, interests, accent } = character;
-  return { slug, name, age, tagline, shortBio, interests, accent };
-}
-
-export function listCharacters(): CharacterSummary[] {
-  return CHARACTERS.map(toSummary);
-}
-
-export function getCharacterSummary(slug: string): CharacterSummary | null {
-  const character = getCharacter(slug);
-  return character ? toSummary(character) : null;
-}
-
-export function getCharacter(slug: string): Character | null {
-  return CHARACTERS.find((c) => c.slug === slug) ?? null;
-}

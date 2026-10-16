@@ -1,14 +1,27 @@
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { chatRequestSchema } from "@/lib/validation/chat";
 import { AiError } from "@/server/ai/types";
+import { getCurrentUser, getProfile, isOnboarded } from "@/server/auth/session";
 import { CharacterNotFoundError, streamReply } from "@/server/conversation/engine";
 
-const MAX_BODY_BYTES = 128 * 1024;
+const MAX_BODY_BYTES = 16 * 1024;
 
 function errorResponse(status: number, message: string) {
   return Response.json({ error: message }, { status });
 }
 
 export async function POST(request: Request) {
+  if (!isSupabaseConfigured()) {
+    return errorResponse(503, "La base de datos no está configurada.");
+  }
+
+  // Autorización en el servidor: nunca se confía en lo que diga el navegador.
+  const user = await getCurrentUser();
+  if (!user) return errorResponse(401, "Inicia sesión para chatear.");
+  if (!isOnboarded(await getProfile(user.id))) {
+    return errorResponse(403, "Completa la bienvenida antes de chatear.");
+  }
+
   const length = Number(request.headers.get("content-length") ?? 0);
   if (length > MAX_BODY_BYTES) return errorResponse(413, "Mensaje demasiado grande");
 
@@ -22,10 +35,10 @@ export async function POST(request: Request) {
   const parsed = chatRequestSchema.safeParse(json);
   if (!parsed.success) return errorResponse(400, "Petición no válida");
 
-  const chunks = streamReply(parsed.data, request.signal);
+  const chunks = streamReply({ userId: user.id, ...parsed.data }, request.signal);
 
   // Se pide el primer fragmento antes de responder para poder devolver un
-  // código de error correcto si el personaje no existe o la IA falla al inicio.
+  // código de error correcto si el personaje no existe o algo falla al inicio.
   let first: IteratorResult<string>;
   try {
     first = await chunks.next();
@@ -35,7 +48,7 @@ export async function POST(request: Request) {
       console.error("[chat] error del proveedor de IA:", error.code);
       return errorResponse(503, "El personaje no puede responder ahora. Inténtalo más tarde.");
     }
-    console.error("[chat] error inesperado");
+    console.error("[chat] error inesperado:", error instanceof Error ? error.message : "desconocido");
     return errorResponse(500, "Error inesperado");
   }
 

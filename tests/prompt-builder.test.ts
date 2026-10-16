@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { ChatMessage } from "@/server/ai/types";
-import { getCharacter } from "@/server/characters/catalog";
+import { BUILTIN_CHARACTERS } from "@/server/characters/builtin";
 import { buildChatRequest, HISTORY_WINDOW } from "@/server/conversation/prompt-builder";
 import { SAFETY_RULES } from "@/server/conversation/safety";
 
-const character = getCharacter("lucia")!;
+const character = BUILTIN_CHARACTERS[0];
 const options = { model: "mock", maxOutputTokens: 400 };
 
 describe("buildChatRequest", () => {
