@@ -70,7 +70,7 @@ begin
     'FALLO: A ve personajes no publicados';
   assert (select count(*) from public.app_settings) = 0, 'FALLO: A puede leer los ajustes';
   assert (select count(*) from public.admin_audit_log) = 0, 'FALLO: A puede leer el registro de administración';
-  assert not public.is_admin(), 'FALLO: A aparece como administradora';
+  assert not private.is_admin(), 'FALLO: A aparece como administradora';
 
   -- Puede cambiar su nombre visible…
   update public.profiles set display_name = 'Ana' where id = '00000000-0000-4000-8000-00000000000a';
@@ -146,7 +146,7 @@ set local request.jwt.claims to '{"sub":"00000000-0000-4000-8000-00000000000c","
 do $$
 declare n integer;
 begin
-  assert public.is_admin(), 'FALLO: C no se reconoce como administrador';
+  assert private.is_admin(), 'FALLO: C no se reconoce como administrador';
   assert exists (select 1 from public.characters where slug = 'prueba-oculto'),
     'FALLO: el administrador no ve los personajes ocultos';
   assert (select count(*) from public.profiles) >= 3, 'FALLO: el administrador no ve los perfiles';

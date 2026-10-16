@@ -57,6 +57,7 @@ Todo se hace desde el panel web de [supabase.com](https://supabase.com), sin ins
 2. **Crea las tablas:** en el menú lateral, abre **SQL Editor** → New query. Pega el contenido completo de cada uno de estos archivos, **en este orden**, y pulsa **Run** después de cada uno:
    1. `supabase/migrations/20261016130000_esquema_inicial.sql`
    2. `supabase/migrations/20261016130100_contenido_inicial.sql`
+   3. `supabase/migrations/20261016143000_is_admin_privado.sql`
 
    Deberías ver "Success. No rows returned".
 3. **Comprueba la seguridad (opcional, recomendado):** en una consulta nueva pega `supabase/tests/comprobar_seguridad.sql` y pulsa **Run**. Si ves "Success", todas las comprobaciones de aislamiento entre usuarios han pasado; si algo falla, verás un error que empieza por `FALLO:`. No deja datos: lo deshace todo al terminar.
