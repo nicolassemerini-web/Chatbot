@@ -59,6 +59,7 @@ Todo se hace desde el panel web de [supabase.com](https://supabase.com), sin ins
    2. `supabase/migrations/20261016130100_contenido_inicial.sql`
    3. `supabase/migrations/20261016143000_is_admin_privado.sql`
    4. `supabase/migrations/20261016150000_lucia_perfil_detallado.sql`
+   5. `supabase/migrations/20261016160000_limites_de_consumo.sql`
 
    Deberías ver "Success. No rows returned".
 3. **Comprueba la seguridad (opcional, recomendado):** en una consulta nueva pega `supabase/tests/comprobar_seguridad.sql` y pulsa **Run**. Si ves "Success", todas las comprobaciones de aislamiento entre usuarios han pasado; si algo falla, verás un error que empieza por `FALLO:`. No deja datos: lo deshace todo al terminar.
@@ -74,6 +75,22 @@ Todo se hace desde el panel web de [supabase.com](https://supabase.com), sin ins
 6. **Reinicia** `npm run dev` para que lea las variables.
 
 **Sobre los correos:** el correo que incluye Supabase de serie solo envía unos pocos mensajes por hora y, en proyectos nuevos, solo a las direcciones de los miembros de tu organización de Supabase. Para pruebas basta: crea tu cuenta con **tu propio correo**. Para usuarios reales hará falta un proveedor de correo propio (Fase 6). Si quieres probar sin confirmar el correo, puedes desactivar temporalmente *Authentication → Sign In / Providers → Email → Confirm email*.
+
+## Activar la IA real (Claude)
+
+Por defecto las respuestas son simuladas (`AI_PROVIDER=mock`). Para que los personajes conversen de verdad:
+
+1. Crea una cuenta en [console.anthropic.com](https://console.anthropic.com), añade crédito prepago y **pon un límite de gasto mensual** (Settings → Limits).
+2. Crea una API key (API Keys → Create Key). **Cópiala solo en `.env.local`, nunca en un chat.**
+3. En `.env.local` pon:
+   ```
+   AI_PROVIDER=anthropic
+   AI_CHAT_MODEL=claude-haiku-5-5
+   ANTHROPIC_API_KEY=sk-ant-...
+   ```
+4. Reinicia `npm run dev`. El aviso "Modo de prueba" desaparece del chat.
+
+**Límites de consumo** (se comprueban en el servidor antes de llamar a la IA): peticiones por minuto, mensajes por día según el plan del usuario (30 en el gratuito) y un freno global de gasto diario. Cada respuesta registra los tokens y el coste estimado.
 
 Sin Supabase configurado, la web funciona en **modo demostración**: se ven el inicio y los personajes, pero no hay cuentas ni chat.
 

@@ -70,13 +70,21 @@ Objetivo: que el propietario pueda cambiar personajes, textos, límites y modelo
 
 **Terminado cuando:** el propietario crea un personaje nuevo, cambia un texto y un límite desde el panel, y los cambios se ven en la web sin desplegar código.
 
-## Fase 4: Motor de conversación con IA real
+## Fase 4: Motor de conversación con IA real (en curso)
 
 1. Adaptador del proveedor real (Anthropic), con streaming y caché de prompts.
 2. Constructor de prompts con reglas comunes y ficha del personaje.
 3. Límites de consumo: anti-abuso, cuota diaria y freno global de gasto (leídos de los ajustes del panel).
 4. Registro de tokens y coste por mensaje.
 5. Conjunto de conversaciones de evaluación (identidad de IA, intentos de saltarse las reglas).
+
+**Implementado (pendiente de probar con una clave real):**
+
+- Proveedor de Anthropic con Claude Haiku 5.5 (`src/server/ai/anthropic.ts`): streaming, sin razonamiento y con esfuerzo bajo para respuestas rápidas y baratas, sin `temperature`/`top_p` (el modelo los rechaza), y corte de la conexión si el usuario cierra el chat. Los errores del proveedor se traducen a errores neutrales y nunca llegan al usuario con detalles internos.
+- Límites de consumo (`src/server/quotas/` y migración `20261016160000_limites_de_consumo.sql`): peticiones por minuto, cuota diaria según el plan (contador atómico en la base de datos, probado con 40 peticiones simultáneas) y freno global de gasto. Registro de tokens y coste estimado por usuario y día.
+- Probado con un servidor de Anthropic simulado: parámetros enviados, streaming, rechazos y todos los códigos de error. **No se ha probado con la API real** (necesita la clave del propietario).
+
+**Pendiente en esta fase:** medir el coste real por mensaje con la clave, y el conjunto de conversaciones de evaluación.
 
 **Necesita del propietario:** cuenta en el proveedor de IA, clave API y límite de gasto configurado en su consola.
 **Terminado cuando:** conversación real en streaming, límites comprobados con pruebas y coste por mensaje medido (no estimado).

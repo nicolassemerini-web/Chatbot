@@ -202,4 +202,82 @@ begin
 end $$;
 
 reset role;
+
+-- Límites de consumo ----------------------------------------------------------
+-- Datos de consumo de A y de B (como propietario).
+insert into public.usage_counters (user_id, day, messages, cost_micros) values
+  ('00000000-0000-4000-8000-00000000000a', (now() at time zone 'Europe/Madrid')::date, 3, 100),
+  ('00000000-0000-4000-8000-00000000000b', (now() at time zone 'Europe/Madrid')::date, 5, 200);
+
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"00000000-0000-4000-8000-00000000000a","role":"authenticated"}';
+
+do $$
+declare n integer;
+begin
+  assert (select count(*) from public.usage_counters) = 1, 'FALLO: A ve el consumo de otras personas';
+  update public.usage_counters set messages = 0;
+  get diagnostics n = row_count;
+  assert false, 'FALLO: A puede editar su contador de consumo';
+exception when insufficient_privilege then null;
+end $$;
+
+do $$
+begin
+  begin
+    perform public.consume_message('00000000-0000-4000-8000-00000000000a');
+    raise exception 'FALLO: un usuario puede ejecutar consume_message';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.record_usage('00000000-0000-4000-8000-00000000000a', 1, 1, 1);
+    raise exception 'FALLO: un usuario puede ejecutar record_usage';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.global_cost_today();
+    raise exception 'FALLO: un usuario puede ejecutar global_cost_today';
+  exception when insufficient_privilege then null; end;
+end $$;
+
+reset role;
+set local role anon;
+set local request.jwt.claims to '{"role":"anon"}';
+do $$
+begin
+  begin
+    perform public.consume_message('00000000-0000-4000-8000-00000000000a');
+    raise exception 'FALLO: un visitante puede ejecutar consume_message';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform 1 from public.usage_counters;
+    raise exception 'FALLO: un visitante puede leer el consumo';
+  exception when insufficient_privilege then null; end;
+end $$;
+
+-- El servidor (service_role) cuenta mensajes hasta el límite del plan y ni uno más.
+reset role;
+update public.plans set daily_messages = 2 where id = 'free';
+delete from public.usage_counters;
+set local role service_role;
+do $$
+declare r record;
+begin
+  select * into r from public.consume_message('00000000-0000-4000-8000-00000000000a');
+  assert r.allowed and r.used = 1 and r.quota = 2, 'FALLO: primer mensaje del día';
+  select * into r from public.consume_message('00000000-0000-4000-8000-00000000000a');
+  assert r.allowed and r.used = 2, 'FALLO: segundo mensaje del día';
+  select * into r from public.consume_message('00000000-0000-4000-8000-00000000000a');
+  assert not r.allowed and r.used = 2 and r.quota = 2, 'FALLO: se permite pasar del límite diario';
+  assert (select count(*) from public.consume_message('00000000-0000-4000-8000-00000000000a')) = 1,
+    'FALLO: consume_message devuelve más de una fila al estar bloqueado';
+  -- El límite de A no afecta a B.
+  select * into r from public.consume_message('00000000-0000-4000-8000-00000000000b');
+  assert r.allowed and r.used = 1, 'FALLO: el límite de A afecta a B';
+
+  perform public.record_usage('00000000-0000-4000-8000-00000000000a', 1000, 50, 125);
+  perform public.record_usage('00000000-0000-4000-8000-00000000000a', 500, 25, 75);
+  assert (select tokens_in from public.usage_counters where user_id = '00000000-0000-4000-8000-00000000000a') = 1500, 'FALLO: suma de tokens';
+  assert public.global_cost_today() = 200, 'FALLO: gasto global del día';
+end $$;
+
+reset role;
 rollback;

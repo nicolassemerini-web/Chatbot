@@ -2,6 +2,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { chatRequestSchema } from "@/lib/validation/chat";
 import { AiError } from "@/server/ai/types";
 import { getCurrentUser, getProfile, isOnboarded } from "@/server/auth/session";
+import { QuotaError } from "@/server/quotas/limits";
 import { CharacterNotFoundError, streamReply } from "@/server/conversation/engine";
 
 const MAX_BODY_BYTES = 16 * 1024;
@@ -51,9 +52,15 @@ export async function POST(request: Request) {
     first = await chunks.next();
   } catch (error) {
     if (error instanceof CharacterNotFoundError) return errorResponse(404, error.message);
+    if (error instanceof QuotaError) return errorResponse(429, error.message);
     if (error instanceof AiError) {
-      console.error("[chat] error del proveedor de IA:", error.code);
-      return errorResponse(503, "El personaje no puede responder ahora. Inténtalo más tarde.");
+      console.error("[chat] error del proveedor de IA:", error.code, error.message);
+      return errorResponse(
+        503,
+        error.code === "misconfigured"
+          ? "La IA no está configurada todavía (falta la clave o el modelo)."
+          : "El personaje no puede responder ahora. Inténtalo más tarde.",
+      );
     }
     console.error("[chat] error inesperado:", error instanceof Error ? error.message : "desconocido");
     return errorResponse(500, "Error inesperado");
