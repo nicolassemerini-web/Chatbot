@@ -7,8 +7,19 @@ import { getSupabasePublicEnv } from "@/lib/supabase/env";
  * No decide permisos: eso se comprueba en cada página, acción y ruta.
  */
 export async function proxy(request: NextRequest) {
-  let response = NextResponse.next({ request });
   const env = getSupabasePublicEnv();
+
+  // Si la dirección de retorno no está autorizada en Supabase, los enlaces de
+  // los correos vuelven a la página de inicio con ?code=…: se reconducen a la
+  // ruta que completa el acceso.
+  const url = request.nextUrl;
+  if (env && url.pathname === "/" && (url.searchParams.has("code") || url.searchParams.has("token_hash"))) {
+    const callback = url.clone();
+    callback.pathname = "/auth/callback";
+    return NextResponse.redirect(callback);
+  }
+
+  let response = NextResponse.next({ request });
   if (!env) return response;
 
   const supabase = createServerClient(env.url, env.publishableKey, {
