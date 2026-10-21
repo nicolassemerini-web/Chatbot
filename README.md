@@ -76,6 +76,25 @@ Todo se hace desde el panel web de [supabase.com](https://supabase.com), sin ins
 
 **Sobre los correos:** el correo que incluye Supabase de serie solo envía unos pocos mensajes por hora y, en proyectos nuevos, solo a las direcciones de los miembros de tu organización de Supabase. Para pruebas basta: crea tu cuenta con **tu propio correo**. Para usuarios reales hará falta un proveedor de correo propio (Fase 6). Si quieres probar sin confirmar el correo, puedes desactivar temporalmente *Authentication → Sign In / Providers → Email → Confirm email*.
 
+## Probar con una IA gratuita
+
+Si todavía no quieres pagar, puedes probar con un servicio gratuito compatible con la API de OpenAI. **Sirven para probar, no para usuarios reales**: tienen límites bajos y su calidad en español y en rol de personaje es menor que la de Claude.
+
+Ejemplo con [Groq](https://console.groq.com) (gratis y sin tarjeta; crea una API key en su consola):
+
+```
+AI_PROVIDER=openai-compatible
+AI_BASE_URL=https://api.groq.com/openai/v1
+AI_CHAT_MODEL=llama-3.3-70b-versatile
+AI_API_KEY=pega-aquí-tu-clave
+AI_PRICE_INPUT_PER_MTOK_USD=0
+AI_PRICE_OUTPUT_PER_MTOK_USD=0
+```
+
+Comprueba en la consola de Groq que el modelo sigue disponible: los nombres cambian. Otras opciones: [OpenRouter](https://openrouter.ai) (modelos con sufijo `:free`) u [Ollama](https://ollama.com) en tu propio ordenador (gratis y 100 % privado, pero necesita un PC con buena tarjeta gráfica o bastante memoria).
+
+**Privacidad:** antes de enviar conversaciones de otras personas a un servicio gratuito, revisa su política de datos. Por ejemplo, el nivel gratuito de Gemini puede usar lo que envías para mejorar los productos de Google y permitir que revisores lo lean, así que no es adecuado para usuarios reales.
+
 ## Activar la IA real (Claude)
 
 Por defecto las respuestas son simuladas (`AI_PROVIDER=mock`). Para que los personajes conversen de verdad:

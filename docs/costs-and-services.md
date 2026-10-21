@@ -29,6 +29,19 @@
 
 Un token equivale aproximadamente a tres cuartos de una palabra. El precio de Haiku 5.5 es para prompts de hasta 100.000 tokens, muy por encima de lo que usará esta aplicación. La caché de prompts cobra la parte repetida del contexto (reglas y ficha del personaje) a una fracción del precio normal. El razonamiento interno del modelo se factura como tokens de salida, por lo que para el chat se usará un nivel de esfuerzo bajo.
 
+### Alternativas gratuitas (solo para pruebas)
+
+La arquitectura permite cambiar de proveedor sin tocar el motor (`AI_PROVIDER=openai-compatible`). Los servicios gratuitos tienen límites y condiciones que cambian a menudo: **comprueba siempre la página oficial de cada uno**.
+
+| Opción | Gratis | A tener en cuenta |
+| --- | --- | --- |
+| Groq | Sí, sin tarjeta, con límites por modelo (del orden de cientos o pocos miles de peticiones al día) | Los tokens por minuto suelen ser el límite real; según las fuentes consultadas no conserva las entradas por defecto |
+| OpenRouter | Modelos con sufijo `:free` | Límites diarios bajos hasta comprar crédito; calidad variable |
+| Google Gemini | Nivel gratuito limitado a modelos Flash | Lo que envías puede usarse para mejorar productos de Google y ser leído por revisores: **no usar con datos de usuarios reales** |
+| Ollama (en tu PC) | Sí, sin límites | Necesita un ordenador potente; privado, pero la calidad depende del modelo |
+
+Para un producto real, los servicios gratuitos no son viables: límites bajos, calidad menor y, en algunos casos, uso de los datos.
+
 ### Estimación por mensaje
 
 Supuestos para un turno de chat: 2.500 tokens estables en caché (reglas y ficha), unos 3.900 tokens variables (resumen, recuerdos, últimos 20 mensajes y el mensaje nuevo) y unos 350 tokens de salida (respuesta más razonamiento breve).

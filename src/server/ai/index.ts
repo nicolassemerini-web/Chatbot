@@ -2,6 +2,7 @@ import "server-only";
 
 import { createAnthropicProvider } from "./anthropic";
 import { createMockProvider, type MockScript } from "./mock";
+import { createOpenAiCompatibleProvider } from "./openai-compatible";
 import { AiError, type AiProvider } from "./types";
 
 export type AiConfig = {
@@ -35,6 +36,14 @@ export function getAiProvider(mockScript: MockScript): AiProvider {
       const apiKey = process.env.ANTHROPIC_API_KEY;
       if (!apiKey) throw new AiError("misconfigured", "Falta ANTHROPIC_API_KEY");
       return createAnthropicProvider({ apiKey });
+    }
+    case "openai-compatible": {
+      // Groq, OpenRouter, Ollama, Gemini (modo compatible)... Solo hacen falta
+      // la dirección, el modelo y (casi siempre) una clave.
+      const baseURL = process.env.AI_BASE_URL;
+      if (!baseURL) throw new AiError("misconfigured", "Falta AI_BASE_URL");
+      if (!process.env.AI_CHAT_MODEL) throw new AiError("misconfigured", "Falta AI_CHAT_MODEL");
+      return createOpenAiCompatibleProvider({ baseURL, apiKey: process.env.AI_API_KEY || undefined });
     }
     default:
       throw new AiError("misconfigured", `Proveedor de IA no soportado: ${provider}`);
