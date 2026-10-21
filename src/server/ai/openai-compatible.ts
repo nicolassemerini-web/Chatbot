@@ -5,6 +5,8 @@ export type OpenAiCompatibleOptions = {
   baseURL: string;
   apiKey?: string;
   timeoutMs?: number;
+  /** Creatividad (0-2). Más bajo = respuestas más coherentes. Por defecto 0,7. */
+  temperature?: number;
 };
 
 type StreamEvent = {
@@ -50,6 +52,7 @@ export function createOpenAiCompatibleProvider(options: OpenAiCompatibleOptions)
             body: JSON.stringify({
               model: request.model,
               max_tokens: request.maxOutputTokens,
+              temperature: options.temperature ?? 0.7,
               stream: true,
               stream_options: { include_usage: true },
               messages: [

@@ -80,14 +80,21 @@ describe("proveedor compatible con OpenAI (Groq, OpenRouter, Ollama…)", () => 
   it("envía la petición en el formato de chat completions", async () => {
     fake = { status: 200, lines: ok(["ok"]) };
     await collect(provider("clave-de-prueba").streamChat(request));
-    const body = lastBody as unknown as { model: string; stream: boolean; max_tokens: number; messages: { role: string; content: string }[] };
+    const body = lastBody as unknown as { model: string; stream: boolean; max_tokens: number; temperature: number; messages: { role: string; content: string }[] };
     expect(lastPath).toBe("/v1/chat/completions");
     expect(lastHeaders.authorization).toBe("Bearer clave-de-prueba");
     expect(body.model).toBe("llama-3.3-70b-versatile");
     expect(body.stream).toBe(true);
     expect(body.max_tokens).toBe(400);
+    expect(body.temperature).toBe(0.7);
     expect(body.messages[0]).toEqual({ role: "system", content: "Reglas fijas\n\nFicha del personaje" });
     expect(body.messages.at(-1)).toEqual({ role: "user", content: "Hola" });
+  });
+
+  it("permite ajustar la temperatura", async () => {
+    fake = { status: 200, lines: ok(["ok"]) };
+    await collect(createOpenAiCompatibleProvider({ baseURL, temperature: 0.3 }).streamChat(request));
+    expect((lastBody as unknown as { temperature: number }).temperature).toBe(0.3);
   });
 
   it("funciona sin clave (p. ej. Ollama en local)", async () => {

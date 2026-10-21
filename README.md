@@ -89,9 +89,10 @@ AI_CHAT_MODEL=llama-3.3-70b-versatile
 AI_API_KEY=pega-aquí-tu-clave
 AI_PRICE_INPUT_PER_MTOK_USD=0
 AI_PRICE_OUTPUT_PER_MTOK_USD=0
+AI_TEMPERATURE=0.6
 ```
 
-Comprueba en la consola de Groq que el modelo sigue disponible: los nombres cambian. Otras opciones: [OpenRouter](https://openrouter.ai) (modelos con sufijo `:free`) u [Ollama](https://ollama.com) en tu propio ordenador (gratis y 100 % privado, pero necesita un PC con buena tarjeta gráfica o bastante memoria).
+`AI_TEMPERATURE` (0 a 2, por defecto 0,7) controla la creatividad: si el personaje desvaría, bájala. Comprueba en la consola de Groq que el modelo sigue disponible: los nombres cambian. Otras opciones: [OpenRouter](https://openrouter.ai) (modelos con sufijo `:free`) u [Ollama](https://ollama.com) en tu propio ordenador (gratis y 100 % privado, pero necesita un PC con buena tarjeta gráfica o bastante memoria).
 
 **Privacidad:** antes de enviar conversaciones de otras personas a un servicio gratuito, revisa su política de datos. Por ejemplo, el nivel gratuito de Gemini puede usar lo que envías para mejorar los productos de Google y permitir que revisores lo lean, así que no es adecuado para usuarios reales.
 

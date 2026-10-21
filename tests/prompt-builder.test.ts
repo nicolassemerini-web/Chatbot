@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ChatMessage } from "@/server/ai/types";
 import { BUILTIN_CHARACTERS } from "@/server/characters/builtin";
-import { buildChatRequest, HISTORY_WINDOW } from "@/server/conversation/prompt-builder";
+import { buildChatRequest, CONVERSATION_GUIDE, HISTORY_WINDOW } from "@/server/conversation/prompt-builder";
 import { SAFETY_RULES } from "@/server/conversation/safety";
 
 const character = BUILTIN_CHARACTERS[0];
@@ -12,6 +12,7 @@ describe("buildChatRequest", () => {
     const req = buildChatRequest(character, [{ role: "user", content: "Hola" }], options);
     expect(req.system[0]).toBe(SAFETY_RULES);
     expect(req.system[1]).toContain("Lucía");
+    expect(req.system[2]).toBe(CONVERSATION_GUIDE);
   });
 
   it("limita el historial a la ventana configurada", () => {

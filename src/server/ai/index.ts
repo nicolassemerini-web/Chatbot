@@ -43,7 +43,16 @@ export function getAiProvider(mockScript: MockScript): AiProvider {
       const baseURL = process.env.AI_BASE_URL;
       if (!baseURL) throw new AiError("misconfigured", "Falta AI_BASE_URL");
       if (!process.env.AI_CHAT_MODEL) throw new AiError("misconfigured", "Falta AI_CHAT_MODEL");
-      return createOpenAiCompatibleProvider({ baseURL, apiKey: process.env.AI_API_KEY || undefined });
+      const temperature = Number(process.env.AI_TEMPERATURE);
+      return createOpenAiCompatibleProvider({
+        baseURL,
+        apiKey: process.env.AI_API_KEY || undefined,
+        // Anthropic (Claude Haiku 5.5) no admite este parámetro; aquí sí.
+        temperature:
+          process.env.AI_TEMPERATURE && Number.isFinite(temperature) && temperature >= 0 && temperature <= 2
+            ? temperature
+            : undefined,
+      });
     }
     default:
       throw new AiError("misconfigured", `Proveedor de IA no soportado: ${provider}`);
